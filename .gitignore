@@ -4,3 +4,6 @@
 .httr-oauth
 .DS_Store
 .quarto
+samerica_rivers.rds
+states_biomes_rivers.rds
+HydroRIVERS_v10_sa_shp
