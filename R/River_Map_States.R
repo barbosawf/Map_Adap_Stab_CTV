@@ -247,7 +247,7 @@ ggsave(
   device = "jpg"
 )
 
-# Usefull links -----------------------------------------------------------
+# Useful links ------------------------------------------------------------
 
 # https://carpentries-incubator.github.io/r-tidyverse-4-datasets/instructor/aio.html
 
