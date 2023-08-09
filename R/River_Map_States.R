@@ -1,4 +1,7 @@
 
+# Creating folders --------------------------------------------------------
+
+dir.create("Figure")
 
 # Packages ----------------------------------------------------------------
 
@@ -17,15 +20,14 @@ invisible(lapply(libs, library,
                  character.only = T))
 
 
-
 # Brazilian counties ------------------------------------------------------
 
-br_counties <- read.csv("Brazilian_Counties.csv")
+br_counties <- read.csv("Data/Brazilian_Counties.csv")
 
 
 # Specific counties -------------------------------------------------------
 
-readxl::read_xlsx("new_data.xlsx") |>
+readxl::read_xlsx("Data/chosen_counties.xlsx") |>
   dplyr::select(LOCAL) |>
   pull() |>
   unique() |>
@@ -58,7 +60,7 @@ all_states |>
 
 biom_w <- geobr::read_biomes(year = 2019,
                              simplified = TRUE,
-                             showProgress = T)
+                             showProgress = TRUE)
 
 
 # Get rivers data ---------------------------------------------------------
@@ -72,15 +74,18 @@ get_rivers <- function(url, file_name) {
                 destfile = file_name,
                 mode = "wb")
 
-  unzip(file_name)
+  proj_folder <- rstudioapi::getActiveProject()
+
+  unzip(file_name, exdir = "Data")
 }
 
 get_rivers(url, file_name)
-print("Getting Rivers")
-list.files()
+
+
+# Loading rivers data -----------------------------------------------------
 
 load_rivers <- function() {
-  filenames <- list.files(path = "HydroRIVERS_v10_sa_shp",
+  filenames <- list.files(path = "Data/HydroRIVERS_v10_sa_shp",
                           pattern = "\\.shp$",
                           full.names = T)
   print(filenames)
@@ -92,15 +97,15 @@ load_rivers <- function() {
 # It's timing consuming
 samerica_rivers <- load_rivers()
 
-# saveRDS(samerica_rivers, file = "samerica_rivers.rds")
+# saveRDS(samerica_rivers, file = "Data/samerica_rivers.rds")
 
-samerica_rivers <- readRDS(file = "samerica_rivers.rds")
+samerica_rivers <- readRDS(file = "Data/samerica_rivers.rds")
 
 
 # Intersection with biomes ------------------------------------------------
 
 biom_w |>
-  sf::st_transform(sf::st_crs(MS_PR)) |>
+#  sf::st_transform(sf::st_crs(MS_PR)) |>
   sf::st_intersection(MS_PR) -> states_biomes
 
 
@@ -113,8 +118,8 @@ samerica_rivers |>
   sf::st_intersection(states_biomes) -> states_biomes_rivers
 
 
-saveRDS(states_biomes_rivers, file = "states_biomes_rivers.rds")
-states_biomes_rivers <- readRDS(file = "states_biomes_rivers.rds")
+# saveRDS(states_biomes_rivers, file = "Data/states_biomes_rivers.rds")
+states_biomes_rivers <- readRDS(file = "Data/states_biomes_rivers.rds")
 
 # Check the possibilities
 states_biomes_rivers$ORD_FLOW |> unique()
@@ -141,7 +146,7 @@ unique(states_biomes_rivers_width$name_biome) |> length()
 
 hcl.pals("qualitative")
 
-hcl.colors(4, "Set 2",
+hcl.colors(4, "Dark 2",
            alpha = 1) -> colors_vec
 
 
@@ -161,12 +166,13 @@ viridis::viridis(
 scales::show_col(colors_vec_2[c(3, 5, 7, 9)])
 
 
-
-# Plot --------------------------------------------------------------------
+# Adding a centroid in states data ----------------------------------------
 
 MS_PR |>
   mutate(centroids = st_centroid(geom)) -> MS_PR
 
+
+# Plot --------------------------------------------------------------------
 
 ggplot() +
   geom_sf(data = states_biomes,
@@ -180,7 +186,7 @@ ggplot() +
     show.legend = FALSE
   ) +
   scale_fill_manual(name = "Biomes",
-                    values = colors_vec_2[c(3, 5, 7, 9)]) +
+                    values = colors_vec_2[c(5, 7, 3, 9)]) +
   geom_sf(data = MS_PR,
           alpha = 0,
           lwd = 0.9) +
@@ -227,9 +233,13 @@ ggplot() +
 
 p
 
+
+# Saving the graphic ------------------------------------------------------
+
 ggsave(
   plot = p,
-  filename = "MS_PR_river_biomes.jpg",
+  filename = "MS_PR_river_biomes_2.jpg",
+  path = "Figures",
   width = 8.35,
   height = 6.70,
   dpi = 600,
